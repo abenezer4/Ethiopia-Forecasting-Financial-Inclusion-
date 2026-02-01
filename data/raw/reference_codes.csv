@@ -1,0 +1,13 @@
+field,code,description
+record_type,observation,Measured values
+record_type,event,Policies, product launches, market entries
+record_type,impact_link,Modeled relationships
+record_type,target,Official policy goals
+pillar,Access,Account Ownership
+pillar,Usage,Digital Payment Adoption
+category,product_launch,Launch of a new financial product
+category,market_entry,Entry of a new player
+category,policy,New regulation or policy
+confidence,High,Official source or survey
+confidence,Medium,Estimated or derived
+confidence,Low,Anecdotal or proxy
