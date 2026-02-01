@@ -42,6 +42,12 @@ While *Access* (owning an account) is slowing, *Usage* (actually paying for thin
 ![Usage Indicators](figures/usage_indicators.png)
 *Figure 2: Digital Payment Adoption vs. Mobile Money Ownership.*
 
+#### **Insight #4: Mobile Money Dominance**
+Mobile Money ownership stands at **9.45% (2024)**, a figure that seems low compared to operator reports but is rapidly becoming the primary rail for new financial entrants, outpacing traditional bank account growth.
+
+#### **Insight #5: Gender Disparity Persistence**
+Preliminary breakdowns indicate that while overall inclusion is rising, the **gender gap** remains a structural barrier. Female account ownership continues to lag, suggesting that "neutral" technological launches like Telebirr may not automatically close demographic divides without targeted policy interventions.
+
 ---
 
 ### **3. The Timeline of Transformation**
@@ -69,7 +75,14 @@ Forecasting in this environment is not without risks:
 
 ### **Next Steps**
 
-The next phase moves from **Analysis** to **Prediction**. We will build an **Event-Impact Model** that quantifies the "shock" value of policies (like the NBE directive) and uses it to forecast Access and Usage through 2027.
+The next phase moves from **Analysis** to **Prediction** and **Visualization**. Our roadmap includes:
+
+1.  **Event-Impact Modeling (Task 3):** Quantifying the "shock" value of policies (like the NBE directive) to adjust baseline trends.
+2.  **Forecasting with Uncertainty (Task 4):**
+    *   Developing forecasts for Access and Usage through 2027.
+    *   **Scenario Analysis:** Modeling "Optimistic" (rapid policy uptake), "Base," and "Pessimistic" (stagnation) futures.
+    *   **Uncertainty Quantification:** Providing confidence intervals to transparently communicate the margin of error given the sparse historical data.
+3.  **Interactive Dashboard (Task 5):** Building a Streamlit application to allow stakeholders to explore trends, toggle between scenarios, and visualize the impact of specific events dynamically.
 
 *Stay tuned for the final forecast.*
 
