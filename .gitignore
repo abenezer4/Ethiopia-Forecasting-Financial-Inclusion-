@@ -23,7 +23,7 @@ share/python-wheels/
 MANIFEST
 
 # Virtual Env
-venv/
+venv10/
 .venv/
 env/
 .env
@@ -39,7 +39,7 @@ data/raw/*.csv
 data/processed/*.csv
 !data/raw/reference_codes.csv
 !data/raw/ethiopia_fi_unified_data.csv
-
+data/
 # Models
 models/*.pkl
 models/*.joblib
