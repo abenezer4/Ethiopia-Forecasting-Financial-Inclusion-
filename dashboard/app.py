@@ -1,89 +1,102 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import os
+
+# Set Page Config
+st.set_page_config(page_title="Ethiopia FI Dashboard", layout="wide")
 
 # Helper to load data
 @st.cache_data
-def load_data_dashboard():
-    # Adjust path assuming app is run from root or dashboard folder
-    # We'll try relative path from current working dir
-    # If run with `streamlit run dashboard/app.py` from root
+def load_data():
     path = os.path.join('data', 'raw', 'ethiopia_fi_unified_data.csv')
     if not os.path.exists(path):
-         # Try going up one level if run from dashboard dir
          path = os.path.join('..', 'data', 'raw', 'ethiopia_fi_unified_data.csv')
-    
     return pd.read_csv(path)
 
-st.set_page_config(page_title="Ethiopia Financial Inclusion Forecast", layout="wide")
-
-st.title("Ethiopia Financial Inclusion Forecasting System")
+st.title("🇪🇹 Ethiopia Financial Inclusion Dashboard")
+st.markdown("Exploring the trajectory of digital financial transformation from 2011 to 2027.")
 
 try:
-    df = load_data_dashboard()
+    df = load_data()
 except Exception as e:
     st.error(f"Error loading data: {e}")
     st.stop()
 
-# Filter Observations
-obs = df[df['record_type'] == 'observation'].copy()
-obs['observation_date'] = pd.to_datetime(obs['observation_date'])
-obs['year'] = obs['observation_date'].dt.year
-
 # Sidebar
-st.sidebar.header("Settings")
-scenario = st.sidebar.selectbox("Select Scenario", ["Base", "Optimistic", "Pessimistic"])
+st.sidebar.header("Scenario Control")
+scenario = st.sidebar.selectbox("Select Forecast Scenario", ["Base", "Optimistic", "Pessimistic"])
 
-# Section 1: Overview
-st.header("1. Historical Trends")
+# Filter Data
+obs = df[df['record_type'] == 'observation'].copy()
+obs['year'] = pd.to_datetime(obs['observation_date']).dt.year
+access_data = obs[obs['indicator_code'] == 'ACC_OWN'].sort_values('year')
 
-col1, col2 = st.columns(2)
+# --- SECTION 1: KEY METRICS ---
+st.header("1. Key Inclusion Metrics")
+latest_acc = access_data.iloc[-1]['value_numeric']
+prev_acc = access_data.iloc[-2]['value_numeric']
+delta = latest_acc - prev_acc
 
-with col1:
-    st.subheader("Account Ownership (Access)")
-    access_data = obs[obs['indicator_code'] == 'ACC_OWN'].sort_values('year')
+col1, col2, col3 = st.columns(3)
+col1.metric("Account Ownership (2024)", f"{latest_acc}%", f"{delta:+.1f}pp vs 2021")
+col2.metric("Digital Payment Adoption", "35.0%", "Est.")
+col3.metric("Mobile Money Ownership", "9.45%", "2024")
+
+# --- SECTION 2: VISUALIZATIONS ---
+st.header("2. Trend Analysis")
+
+tab1, tab2, tab3, tab4 = st.tabs(["Access Trends", "Usage & MM", "Impact Matrix", "Event Timeline"])
+
+with tab1:
+    st.subheader("Historical Account Ownership")
     st.line_chart(access_data.set_index('year')['value_numeric'])
+    st.info("Insight: Growth slowed to +3pp in the 2021-2024 period.")
 
-with col2:
-    st.subheader("Digital Payment (Usage)")
-    usage_data = obs[obs['pillar'] == 'Usage'].sort_values('year')
-    if not usage_data.empty:
-        # Aggregate by indicator if multiple
-        st.bar_chart(usage_data.set_index('indicator')['value_numeric'])
-    else:
-        st.write("No Usage data available.")
+with tab2:
+    st.subheader("Usage vs Mobile Money Ownership")
+    usage_df = obs[obs['pillar'] == 'Usage'].sort_values('year')
+    st.bar_chart(data=usage_df, x='indicator', y='value_numeric')
+    st.info("Insight: Digital payment adoption (35%) significantly outpaces mobile money ownership (9.45%).")
 
-# Section 2: Forecasts
-st.header("2. Forecasts (2025-2027)")
+with tab3:
+    st.subheader("Event Impact Association Matrix")
+    # Quick reconstruction of Task 3 matrix
+    links = df[df['record_type'] == 'impact_link']
+    st.dataframe(links[['parent_id', 'related_indicator', 'impact_direction', 'impact_magnitude']])
 
-# Simple Forecasting Logic (Replicated from src/forecasting.py for dashboard interactivity)
+with tab4:
+    st.subheader("Key Transformation Milestones")
+    events = df[df['record_type'] == 'event'].sort_values('observation_date')
+    st.table(events[['observation_date', 'category', 'parent_id']])
+
+# --- SECTION 3: FORECASTS ---
+st.header("3. Inclusion Projections (2025-2027)")
+
 years = [2025, 2026, 2027]
-access_growth = 2.84 # slope from EDA
-last_access = access_data.iloc[-1]['value_numeric']
-last_access_year = access_data.iloc[-1]['year']
+slope = 2.84
+last_val = latest_acc
 
 forecast_vals = []
-for y in years:
-    diff = y - last_access_year
-    val = last_access + (access_growth * diff)
+for i, y in enumerate(years):
+    val = last_val + (slope * (y - 2024))
     if scenario == "Optimistic": val *= 1.05
     if scenario == "Pessimistic": val *= 0.95
-    forecast_vals.append(val)
+    forecast_vals.append(round(val, 2))
 
-forecast_df = pd.DataFrame({'Year': years, 'Forecast': forecast_vals})
+forecast_df = pd.DataFrame({'Year': years, 'Projected_Ownership_%': forecast_vals})
 
-st.subheader(f"Access Forecast ({scenario} Scenario)")
-st.table(forecast_df)
+col_f1, col_f2 = st.columns([1, 2])
+with col_f1:
+    st.write(f"**{scenario} Scenario Results**")
+    st.table(forecast_df)
 
-chart_data = pd.concat([
-    access_data[['year', 'value_numeric']].rename(columns={'value_numeric': 'Value'}),
-    forecast_df.rename(columns={'Year': 'year', 'Forecast': 'Value'})
-]).set_index('year')
+with col_f2:
+    # Plot combined
+    hist = access_data[['year', 'value_numeric']].rename(columns={'value_numeric': 'Value'})
+    fore = forecast_df.rename(columns={'Year': 'year', 'Projected_Ownership_%': 'Value'})
+    combined = pd.concat([hist, fore]).set_index('year')
+    st.line_chart(combined)
 
-st.line_chart(chart_data)
-
-# Section 3: Events
-st.header("3. Key Events")
-events = df[df['record_type'] == 'event'][['observation_date', 'category', 'parent_id']]
-st.dataframe(events)
+st.success("Target Alignment: Under the Base scenario, Ethiopia is on track to reach ~57.7% ownership by 2026.")
